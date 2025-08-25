@@ -1,0 +1,17 @@
+jobs:
+  lint-build-push-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # existing steps here ...
+
+      - name: SSH and deploy on EC2
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull your_dockerhub_username/face-detection-app:latest
+            docker stop face-detection-container || true
+            docker rm face-detection-container || true
+            docker run -d --name face-detection-container your_dockerhub_username/face-detection-app:latest
