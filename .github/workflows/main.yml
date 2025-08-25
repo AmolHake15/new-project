@@ -21,7 +21,7 @@ jobs:
         run: pip install flake8
 
       - name: Lint code
-        run: flake8 main.py
+        run: flake8 app.py
 
       - name: Build Docker image
         run: docker build -t face-detection-app .
