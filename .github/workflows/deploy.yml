@@ -11,7 +11,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull your_dockerhub_username/face-detection-app:latest
+            docker pull amolhake15/face-detection-app:latest
             docker stop face-detection-container || true
             docker rm face-detection-container || true
-            docker run -d --name face-detection-container your_dockerhub_username/face-detection-app:latest
+            docker run -d --name face-detection-container amolhake15/face-detection-app:latest
