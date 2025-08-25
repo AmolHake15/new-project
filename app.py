@@ -1,75 +1,62 @@
 import cv2
-import os
-import time
 import logging
+import time
+import os
 
-# Setup logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.INFO)
 
-# Output directory
-OUTPUT_DIR = "output"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# RTSP / webcam stream
-# Replace with your RTSP URL if you have one
-RTSP_URL = 0  # 0 = default webcam
+def detect_faces(frame, face_cascade):
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(gray, 1.1, 4)
 
-# Load Haar Cascade for face detection
-face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+    for (x, y, w, h) in faces:
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+    return frame, faces
+
 
 def main():
-    logging.info("Starting video stream...")
-    cap = cv2.VideoCapture(RTSP_URL)
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    face_cascade = cv2.CascadeClassifier(
+        cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+    )
+
+    # Use RTSP or 0 for webcam
+    cap = cv2.VideoCapture(0)
 
     if not cap.isOpened():
-        logging.error("Failed to open video stream.")
+        logging.error("Failed to connect to camera or stream.")
         return
 
-    frame_count = 0
-    saved_frames = 0
+    logging.info("Successfully connected to video stream.")
 
-    while True:
+    frame_count = 0
+
+    while frame_count < 10:
         ret, frame = cap.read()
         if not ret:
-            logging.warning("Failed to grab frame.")
-            break
+            logging.warning("Dropped frame")
+            continue
 
         start_time = time.time()
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
-
-        for (x, y, w, h) in faces:
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            cv2.putText(
-                frame,
-                "face",
-                (x, max(0, y - 5)),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                (255, 255, 255),
-                1,
-                cv2.LINE_AA
-            )
-
+        annotated_frame, faces = detect_faces(frame, face_cascade)
         inference_time = time.time() - start_time
-        logging.info(f"Frame {frame_count}: {len(faces)} face(s) detected - inference {inference_time:.3f}s")
 
-        # Save only a few frames
-        if saved_frames < 5:
-            frame_path = os.path.join(OUTPUT_DIR, f"frame_{frame_count}.jpg")
-            cv2.imwrite(frame_path, frame)
-            saved_frames += 1
-            logging.info(f"Saved {frame_path}")
+        logging.info(
+            f"Saved frame {frame_count} with {len(faces)} faces detected "
+            f"in {inference_time:.3f} seconds"
+        )
+
+        output_path = os.path.join(output_dir, f"frame_{frame_count}.jpg")
+        cv2.imwrite(output_path, annotated_frame)
 
         frame_count += 1
 
-        # Break after some frames for testing
-        if frame_count > 50:
-            break
-
     cap.release()
-    logging.info("Stream ended.")
+
 
 if __name__ == "__main__":
     main()
-
