@@ -1,3 +1,10 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 jobs:
   lint-build-push-deploy:
     runs-on: ubuntu-latest
